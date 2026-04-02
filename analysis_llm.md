@@ -25,9 +25,12 @@ In jedem Layer werden die Token in Q, K, V und O projiziert.
 ```math
 MACs_{attn\_proj} = N \cdot (2 \cdot d_{model}^2 + 2 \cdot (d_{model} \cdot d_{head} \cdot h_{kv}))
 ```
-*Hinweis:
 ```math
-d_{head} = d_{model} / h = 128$.*
+10^6 \cdot (2 \cdot 16.384^2 + 2 \cdot (16.384 \cdot 128 \cdot 8)) = 5,70 \cdot 10^{14}
+```
+*Hinweis:*
+```math
+d_{head} = 16.384 / 128 = 128
 ```
 
 ### Schritt B: Attention-Mechanik (Quadratisch)
@@ -35,17 +38,26 @@ Berechnung der Scores ($Q K^T$) und des Kontextvektors ($S V$).
 ```math
 MACs_{attn\_mech} = 2 \cdot (N^2 \cdot d_{model})
 ```
+```math
+2 \cdot ((10^6)^2 \cdot 16.384) = 3,28 \cdot 10^{16}
+```
 
 ### Schritt C: Feed-Forward Network (MLP)
 Llama nutzt SwiGLU mit drei Matrizen ($W_{gate}, W_{up}, W_{down}$).
 ```math
 MACs_{mlp} = N \cdot (3 \cdot d_{model} \cdot d_{ff})
 ```
+```math
+10^6 \cdot (3 \cdot 16.384 \cdot 53.248) = 2,62 \cdot 10^{15}
+```
 
 ### Schritt D: Unembedding (Output Layer)
 Projektion des finalen Hidden State auf das Vokabular.
 ```math
 MACs_{output} = N \cdot d_{model} \cdot V
+```
+```math
+10^6 \cdot 16.384 \cdot 128.256 = 2,10 \cdot 10^{15}
 ```
 
 ---
@@ -54,9 +66,9 @@ MACs_{output} = N \cdot d_{model} \cdot V
 
 | Komponente | Formel | Multiplikationen (MACs) |
 | :--- | :--- | :--- |
-| **Linear (Proj + MLP)** | $L \cdot (MACs_{attn\_proj} + MACs_{mlp})$ | $4,02 \cdot 10^{17}$ |
-| **Attention (quadr.)** | $L \cdot MACs_{attn\_mech}$ | $4,13 \cdot 10^{18}$ |
-| **Output Head** | $MACs_{output}$ | $2,10 \cdot 10^{15}$ |
+| **Linear (Proj + MLP)** | $L \cdot (MACs_{attn\_proj} + MACs_{mlp})$<br>$126 \cdot (5,70 \cdot 10^{14} + 2,62 \cdot 10^{15})$ | $4,02 \cdot 10^{17}$ |
+| **Attention (quadr.)** | $L \cdot MACs_{attn\_mech}$<br>$126 \cdot 3,28 \cdot 10^{16}$ | $4,13 \cdot 10^{18}$ |
+| **Output Head** | $MACs_{output}$<br>$10^6 \cdot 16.384 \cdot 128.256$ | $2,10 \cdot 10^{15}$ |
 | **Gesamt** | | **$4,53 \cdot 10^{18}$** |
 
 ---
