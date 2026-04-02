@@ -14,6 +14,17 @@ Diese Analyse berechnet die Anzahl der Multiplikationen (MACs), die für die Ver
 | Vokabulargröße | $V$ | 128.256 | Meta Llama 3.1 Paper [[1]] |
 | Kontext-Länge | $N$ | 1.000.000 | Benutzeranfrage |
 
+### 1.1 Erläuterung der Variablen
+
+*   **$L$ (Layer):** Die Anzahl der Transformer-Blöcke (Layer). Jeder Layer führt eine vollständige Sequenz aus Attention- und Feed-Forward-Berechnungen durch. Ein tieferes Modell kann komplexere Zusammenhänge lernen.
+*   **$d_{model}$ (Hidden Dimension):** Die Breite des Modells bzw. die Größe der Vektordarstellung (Embedding) jedes Tokens. Sie bestimmt die Kapazität des Modells, Informationen pro Token zu kodieren.
+*   **$d_{ff}$ (FFN Dimension):** Die Dimension der Zwischenschicht im Feed-Forward-Netzwerk (MLP). Llama 3 nutzt die SwiGLU-Architektur, bei der die Dimension $d_{ff}$ die Größe der versteckten Schichten innerhalb dieses Moduls definiert.
+*   **$h$ (Attention Query Heads):** Die Anzahl der Köpfe für die "Queries" in der Multi-Head Attention. Dies ermöglicht es dem Modell, parallel verschiedene Arten von Abhängigkeiten im Text zu verarbeiten.
+*   **$h_{kv}$ (Attention KV Heads):** Die Anzahl der Köpfe für "Keys" und "Values". Llama 3 verwendet *Grouped-Query Attention* (GQA), wobei sich mehrere Query-Heads einen KV-Head teilen, um die Effizienz (insbesondere den Speicherbedarf) zu erhöhen.
+*   **$V$ (Vokabulargröße):** Die Gesamtanzahl der eindeutigen Tokens, die das Modell in seinem Wörterbuch führt. Dies beeinflusst die Größe der finalen Ausgabeschicht (Unembedding).
+*   **$N$ (Kontext-Länge):** Die Anzahl der Token in der aktuellen Eingabesequenz. Da die Attention-Mechanik quadratisch mit $N$ skaliert, ist dies der kritischste Faktor für die Rechenlast bei langen Texten.
+*   **$d_{head}$ (Head Dimension):** Die Dimension eines einzelnen Attention-Kopfes ($d_{model} / h$). Sie bestimmt die Größe der Vektoren, die im Skalarprodukt der Attention-Berechnung miteinander multipliziert werden.
+
 ---
 
 ## 2. Mathematischer Ablauf und Berechnungsformeln
