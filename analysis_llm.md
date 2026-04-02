@@ -25,15 +25,24 @@ In jedem Layer werden die Token in Q, K, V und O projiziert.
 ```math
 MACs_{attn\_proj} = N \cdot (2 \cdot d_{model}^2 + 2 \cdot (d_{model} \cdot d_{head} \cdot h_{kv}))
 ```
-*Hinweis:
 ```math
-d_{head} = d_{model} / h = 128$.*
+Fetch_{attn\_proj} = (2 \cdot d_{model}^2 + 2 \cdot d_{model} \cdot d_{head} \cdot h_{kv}) + (2 \cdot N \cdot d_{model})
 ```
+```math
+Store_{attn\_proj} = 2 \cdot N \cdot d_{model} + 2 \cdot N \cdot d_{head} \cdot h_{kv}
+```
+*Hinweis: $d_{head} = d_{model} / h = 128$.*
 
 ### Schritt B: Attention-Mechanik (Quadratisch)
 Berechnung der Scores ($Q K^T$) und des Kontextvektors ($S V$).
 ```math
 MACs_{attn\_mech} = 2 \cdot (N^2 \cdot d_{model})
+```
+```math
+Fetch_{attn\_mech} = N \cdot (d_{model} + 2 \cdot d_{head} \cdot h_{kv}) + 2 \cdot h \cdot N^2
+```
+```math
+Store_{attn\_mech} = 2 \cdot h \cdot N^2 + N \cdot d_{model}
 ```
 
 ### Schritt C: Feed-Forward Network (MLP)
@@ -41,23 +50,35 @@ Llama nutzt SwiGLU mit drei Matrizen ($W_{gate}, W_{up}, W_{down}$).
 ```math
 MACs_{mlp} = N \cdot (3 \cdot d_{model} \cdot d_{ff})
 ```
+```math
+Fetch_{mlp} = (3 \cdot d_{model} \cdot d_{ff}) + N \cdot (d_{model} + 3 \cdot d_{ff})
+```
+```math
+Store_{mlp} = N \cdot (d_{model} + 3 \cdot d_{ff})
+```
 
 ### Schritt D: Unembedding (Output Layer)
 Projektion des finalen Hidden State auf das Vokabular.
 ```math
 MACs_{output} = N \cdot d_{model} \cdot V
 ```
+```math
+Fetch_{output} = (d_{model} \cdot V) + (N \cdot d_{model})
+```
+```math
+Store_{output} = N \cdot V
+```
 
 ---
 
 ## 3. Berechnung für 1 Million Token ($10^6$)
 
-| Komponente | Formel | Multiplikationen (MACs) |
-| :--- | :--- | :--- |
-| **Linear (Proj + MLP)** | $L \cdot (MACs_{attn\_proj} + MACs_{mlp})$ | $4,02 \cdot 10^{17}$ |
-| **Attention (quadr.)** | $L \cdot MACs_{attn\_mech}$ | $4,13 \cdot 10^{18}$ |
-| **Output Head** | $MACs_{output}$ | $2,10 \cdot 10^{15}$ |
-| **Gesamt** | | **$4,53 \cdot 10^{18}$** |
+| Komponente | Formel | MACs | Read/Fetch (Elem.) | Write/Store (Elem.) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Linear (Proj + MLP)** | $L \cdot (MACs_{attn\_proj} + MACs_{mlp})$ | $4,02 \cdot 10^{17}$ | $2,67 \cdot 10^{13}$ | $2,66 \cdot 10^{13}$ |
+| **Attention (quadr.)** | $L \cdot MACs_{attn\_mech}$ | $4,13 \cdot 10^{18}$ | $3,23 \cdot 10^{16}$ | $3,23 \cdot 10^{16}$ |
+| **Output Head** | $MACs_{output}$ | $2,10 \cdot 10^{15}$ | $1,85 \cdot 10^{10}$ | $1,28 \cdot 10^{11}$ |
+| **Gesamt** | | **$4,53 \cdot 10^{18}$** | **$3,23 \cdot 10^{16}$** | **$3,23 \cdot 10^{16}$** |
 
 ---
 
