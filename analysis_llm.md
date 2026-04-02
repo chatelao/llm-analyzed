@@ -25,7 +25,10 @@ In jedem Layer werden die Token in Q, K, V und O projiziert.
 ```math
 MACs_{attn\_proj} = N \cdot (2 \cdot d_{model}^2 + 2 \cdot (d_{model} \cdot d_{head} \cdot h_{kv}))
 ```
-*Hinweis: $d_{head} = d_{model} / h = 128$.*
+*Hinweis:
+```math
+d_{head} = d_{model} / h = 128$.*
+```
 
 ### Schritt B: Attention-Mechanik (Quadratisch)
 Berechnung der Scores ($Q K^T$) und des Kontextvektors ($S V$).
